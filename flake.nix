@@ -10,10 +10,7 @@
     crane.url = "github:ipetkov/crane";
     pre-commit-hooks = {
       url = "github:cachix/git-hooks.nix";
-      inputs = {
-        flake-compat.follows = "";
-        nixpkgs.follows = "nixpkgs";
-      };
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
