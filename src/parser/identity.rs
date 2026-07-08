@@ -235,7 +235,7 @@ impl TryInto<ParsedIdentity> for RawIdentity {
                 .map_err(|e| eyre!("import from identity file {identity_filename} error: {e}"));
 
             #[cfg(feature = "plugin")]
-            let identity_file = identity_file_result.map(|i| i.with_callbacks(UiCallbacks));
+            let identity_file = identity_file_result.map(|i| i.with_callbacks(UiCallbacks::new()));
             #[cfg(not(feature = "plugin"))]
             let identity_file = identity_file_result;
 
@@ -266,7 +266,7 @@ impl TryInto<ParsedIdentity> for RawIdentity {
                     return Err(eyre!("unsupported key: {identity_filename}, {k:#?}"));
                 }
                 Ok(identity) => {
-                    let ident = Box::new(identity.clone().with_callbacks(UiCallbacks));
+                    let ident = Box::new(identity.clone().with_callbacks(UiCallbacks::new()));
                     match age::ssh::Recipient::try_from(identity).map(Box::new) {
                         Ok(recip) => return Ok(ParsedIdentity::from_exist(ident, recip)),
                         Err(e) => {
