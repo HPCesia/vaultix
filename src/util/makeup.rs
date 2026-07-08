@@ -130,6 +130,7 @@ impl<'a> RencInstance<'a> {
                                     .wrap_err_with(|| eyre!("create host cache dir in repo failed"))
                             })
                         {
+                            error!("{e}");
                             res.lock().expect("doesn't matter now").push(Err(e));
                             return;
                         };
@@ -141,9 +142,11 @@ impl<'a> RencInstance<'a> {
                         {
                             o
                         } else {
+                            let e = eyre!("create cache file error: {inrepo_path}");
+                            error!("{e}");
                             res.lock()
                                 .expect("doesn't matter now")
-                                .push(Err(eyre!("create file error")));
+                                .push(Err(e));
                             return;
                         };
 
@@ -155,30 +158,36 @@ impl<'a> RencInstance<'a> {
                         {
                             o
                         } else {
-                            res.lock().expect("must success").push(Err(eyre!(
+                            let e = eyre!(
                                 "secret not decrypted for {inrepo_path}: it may be encrypted with a different identity"
-                            )));
+                            );
+                            error!("{e}");
+                            res.lock().expect("must success").push(Err(e));
                             return;
                         };
 
                         let ctt = match buf.clone().encrypt(iter::once(recip.as_ref())) {
                             Ok(o) => o,
-                            e @ Err(_) => {
+                            Err(e) => {
+                                error!("encrypt failed for {inrepo_path}: {e}");
                                 res.lock()
                                     .expect("doesn't matter now")
-                                    .push(e.map(|_| PathBuf::default()));
+                                    .push(Err(e));
                                 return;
                             }
                         };
 
-                        if target_file.write_all(ctt.inner().as_bytes()).is_err() {
+                        if let Err(e) = target_file.write_all(ctt.inner().as_bytes()) {
+                            let e = eyre!("write cache file failed: {e}");
+                            error!("{e}");
                             res.lock()
                                 .expect("doesn't matter now")
-                                .push(Err(eyre!("write cache file failed")))
-                        };
-                        res.lock()
-                            .expect("thread work end")
-                            .push(Ok(inrepo_path.path.clone()));
+                                .push(Err(e));
+                        } else {
+                            res.lock()
+                                .expect("thread work end")
+                                .push(Ok(inrepo_path.path.clone()));
+                        }
                     }
                 });
             });
