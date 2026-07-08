@@ -55,8 +55,24 @@ impl<'a> RencInstance<'a> {
                         .get(h)
                         .wrap_err_with(|| eyre!("never"))
                         .and_then(|m| {
+                            let total = m.len();
                             m.iter()
-                                .map(|(k, v)| {
+                                .enumerate()
+                                .map(|(i, (k, v))| {
+                                    let kind = if sec_plain_map.contains_key(k) {
+                                        "reuse"
+                                    } else {
+                                        "decrypt"
+                                    };
+                                    info!(
+                                        "[{}/{}] {} {} for {}",
+                                        i + 1,
+                                        total,
+                                        kind,
+                                        k.file,
+                                        h.id()
+                                    );
+
                                     if sec_plain_map.contains_key(k) {
                                         return Ok((v, *k));
                                     }
