@@ -135,13 +135,13 @@ impl<'a> RencInstance<'a> {
 
                         let buf = if let Some(o) = dst_ctt_map_ref
                             .get(inrepo_path)
-                            .and_then(|s| sec_plain_map.get(*s))
+                            .and_then(|sp| sec_plain_map.get(*sp))
                         {
                             o
                         } else {
                             res.lock().expect("must success").push(Err(eyre!(
-                                "The secret store MAY contains stuff encrypted by other identity: {inrepo_path}"
-                            )).wrap_err_with(||eyre!("Getting {:?} error", s)));
+                                "secret not decrypted for {inrepo_path}: it may be encrypted with a different identity"
+                            )));
                             return;
                         };
 
