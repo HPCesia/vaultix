@@ -87,14 +87,6 @@ in
                 to decrypt all secrets.
               '';
             };
-            extraPackages = mkOption {
-              type = with types; listOf package;
-              default = [ ];
-              example = lib.literalExpression "[ pkgs.age-plugin-yubikey ]";
-              description = ''
-                Set of extra packages like age plugins to be added in edit/renc's path.
-              '';
-            };
             pinentryPackage = mkPackageOption config.vaultix.pkgs "pinentry-qt" {
               nullable = true;
               default = null;
@@ -121,10 +113,9 @@ in
                         identity
                         extraRecipients
                         cache
-                        extraPackages
                         pinentryPackage
                         ;
-                      inherit (config'.vaultix) pkgs;
+                      inherit (config'.vaultix) pkgs extraPackages;
                       inherit lib;
                       package = vaultixFlake.packages.${system}.default;
                     }
@@ -161,6 +152,14 @@ in
             defaultText = lib.literalExpression "pkgs";
             description = ''
               pkgs that passed into vaultix apps.
+            '';
+          };
+          extraPackages = mkOption {
+            type = with types; listOf package;
+            default = [ ];
+            example = lib.literalExpression "[ pkgs.age-plugin-yubikey ]";
+            description = ''
+              Set of extra packages like age plugins to be added in edit/renc's path.
             '';
           };
         };
