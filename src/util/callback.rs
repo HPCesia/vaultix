@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use age::secrecy::{ExposeSecret, SecretString};
 use age::Callbacks;
 use pinentry::{ConfirmationDialog, PassphraseInput};
@@ -5,8 +7,24 @@ use rpassword::prompt_password;
 use std::io;
 use subtle::ConstantTimeEq;
 
-#[derive(Clone, Copy)]
-pub struct UiCallbacks;
+#[derive(Clone)]
+pub struct UiCallbacks {
+    cached_passphrase: Arc<Mutex<Option<SecretString>>>,
+}
+
+impl UiCallbacks {
+    pub fn new() -> Self {
+        Self {
+            cached_passphrase: Arc::new(Mutex::new(None)),
+        }
+    }
+}
+
+impl Default for UiCallbacks {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Callbacks for UiCallbacks {
     fn display_message(&self, message: &str) {
@@ -24,7 +42,13 @@ impl Callbacks for UiCallbacks {
     }
 
     fn request_passphrase(&self, description: &str) -> Option<SecretString> {
-        read_secret(description, "input password:", None).ok()
+        let mut cache = self.cached_passphrase.lock().ok()?;
+        if let Some(ref cached) = *cache {
+            return Some(cached.clone());
+        }
+        let passphrase = read_secret(description, "input password:", None).ok()?;
+        *cache = Some(passphrase.clone());
+        Some(passphrase)
     }
 }
 fn confirm(query: &str, ok: &str, cancel: Option<&str>) -> pinentry::Result<bool> {
