@@ -197,12 +197,15 @@ impl<'a> RencInstance<'a> {
 
         let last_res = res.lock().expect("never");
 
-        last_res.iter().for_each(|i| {
-            if let Err(e) = i {
-                error!("{e}");
-            }
-        });
+        let errs: Vec<_> = last_res.iter().filter_map(|i| i.as_ref().err()).collect();
+        for e in &errs {
+            error!("{e}");
+        }
 
-        Ok(())
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(eyre!("{} host(s) failed to re-encrypt", errs.len()))
+        }
     }
 }
