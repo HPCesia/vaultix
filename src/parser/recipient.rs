@@ -36,7 +36,7 @@ impl TryInto<Box<dyn Recipient + Send>> for RecipString {
             let plugin_recip = recip_str
                 .parse::<plugin::Recipient>()
                 .map_err(|e| eyre!(e))?;
-            build_plugin_recip(&plugin_recip, UiCallbacks)
+            build_plugin_recip(&plugin_recip, UiCallbacks::new())
         }
 
         #[cfg(not(feature = "plugin"))]
