@@ -87,15 +87,6 @@ in
                 to decrypt all secrets.
               '';
             };
-            pinentryPackage = mkPackageOption config.vaultix.pkgs "pinentry-qt" {
-              nullable = true;
-              default = null;
-              extraDescription = ''
-                Which pinentry interface to use. If not `null`, the path to the mainProgram
-                as defined in the package’s meta attributes will be set to PINENTRY_PROGRAM
-                environment variable picked up by edit/renc command.
-              '';
-            };
             app = mkOption {
               type = types.lazyAttrsOf (types.lazyAttrsOf types.package);
               default = lib.mapAttrs (
@@ -113,9 +104,8 @@ in
                         identity
                         extraRecipients
                         cache
-                        pinentryPackage
                         ;
-                      inherit (config'.vaultix) pkgs extraPackages;
+                      inherit (config'.vaultix) pkgs extraPackages pinentryPackage;
                       inherit lib;
                       package = vaultixFlake.packages.${system}.default;
                     }
@@ -160,6 +150,15 @@ in
             example = lib.literalExpression "[ pkgs.age-plugin-yubikey ]";
             description = ''
               Set of extra packages like age plugins to be added in edit/renc's path.
+            '';
+          };
+          pinentryPackage = mkPackageOption pkgs "pinentry-qt" {
+            nullable = true;
+            default = null;
+            extraDescription = ''
+              Which pinentry interface to use. If not `null`, the path to the mainProgram
+              as defined in the package’s meta attributes will be set to PINENTRY_PROGRAM
+              environment variable picked up by edit/renc command.
             '';
           };
         };
